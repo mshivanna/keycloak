@@ -18,7 +18,6 @@
 package org.keycloak.services.cors;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.ResponseBuilder;
@@ -36,22 +35,21 @@ import org.keycloak.representations.AccessToken;
  */
 public interface Cors extends Provider {
 
-    public static final long DEFAULT_MAX_AGE = TimeUnit.HOURS.toSeconds(1);
-    public static final String DEFAULT_ALLOW_METHODS = "GET, HEAD, OPTIONS";
-    public static final String DEFAULT_ALLOW_HEADERS = "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, DPoP";
+    long DEFAULT_MAX_AGE = TimeUnit.HOURS.toSeconds(1);
+    String DEFAULT_ALLOW_METHODS = "GET, HEAD, OPTIONS";
+    String DEFAULT_ALLOW_HEADERS = "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, DPoP";
 
-    public static final String ORIGIN_HEADER = "Origin";
-    public static final String AUTHORIZATION_HEADER = "Authorization";
+    String ORIGIN_HEADER = "Origin";
+    String AUTHORIZATION_HEADER = "Authorization";
 
-    public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
-    public static final String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
-    public static final String ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers";
-    public static final String ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
-    public static final String ACCESS_CONTROL_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
-    public static final String ACCESS_CONTROL_MAX_AGE = "Access-Control-Max-Age";
+    String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
+    String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
+    String ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers";
+    String ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
+    String ACCESS_CONTROL_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
+    String ACCESS_CONTROL_MAX_AGE = "Access-Control-Max-Age";
 
-    public static final String ACCESS_CONTROL_ALLOW_ORIGIN_WILDCARD = "*";
-    public static final String INCLUDE_REDIRECTS = "+";
+    String ACCESS_CONTROL_ALLOW_ORIGIN_WILDCARD = "*";
 
     public static Cors add(HttpRequest request, ResponseBuilder response) {
         KeycloakSession session = Resteasy.getContextData(KeycloakSession.class);
@@ -67,28 +65,44 @@ public interface Cors extends Provider {
 
     public Cors builder(ResponseBuilder builder);
 
-    public Cors preflight();
+    Cors preflight();
 
-    public Cors auth();
+    Cors auth();
 
-    public Cors allowAllOrigins();
+    Cors allowAllOrigins();
 
-    public Cors allowedOrigins(KeycloakSession session, ClientModel client);
+    Cors allowedOrigins(KeycloakSession session, ClientModel client);
 
-    public Cors allowedOrigins(AccessToken token);
+    Cors allowedOrigins(AccessToken token);
 
-    public Cors allowedOrigins(String... allowedOrigins);
+    Cors allowedOrigins(String... allowedOrigins);
 
-    public Cors allowedMethods(String... allowedMethods);
+    Cors allowedMethods(String... allowedMethods);
 
-    public Cors exposedHeaders(String... exposedHeaders);
+    Cors exposedHeaders(String... exposedHeaders);
 
-    public Cors addExposedHeaders(String... exposedHeaders);
+    /**
+     * Add the CORS headers to the current {@link org.keycloak.http.HttpResponse}.
+     */
+    void add();
 
-    public Response build();
+    /**
+     * <p>Add the CORS headers to the current server {@link org.keycloak.http.HttpResponse} and returns a {@link Response} based
+     * on the given {@code builder}.
+     *
+     * <p>This is a convenient method to make it easier to return a {@link Response} from methods while at the same time
+     * adding the corresponding CORS headers to the underlying server response.
+     *
+     * @param builder the response builder
+     * @return the response built from the response builder
+     */
+    default Response add(ResponseBuilder builder) {
+        if (builder == null) {
+            throw new IllegalStateException("builder is not set");
+        }
 
-    public boolean build(HttpResponse response);
+        add();
 
-    public boolean build(BiConsumer<String, String> addHeader);
-
+        return builder.build();
+    }
 }
